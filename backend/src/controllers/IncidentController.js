@@ -7,8 +7,6 @@ module.exports = {
 
         const [count] = await connection('incidents').count()
 
-        console.log(count)
-
         const incidents = await connection('incidents')
             .join('ongs', 'ongs.id', '=', 'incidents.ong_id')
             .limit(5)
@@ -43,16 +41,20 @@ module.exports = {
         const { id } = request.params
         const ong_id = request.headers.authorization
 
-        const incident = await connection('incidents')
+        try {
+            const incident = await connection('incidents')
             .where('id', id)
             .select('ong_id')
             .first()
 
-        if (incident.ong_id != ong_id) {
-            return response.status(401).json({ error: 'Operation not permitted.'})
-        }
+            if (incident.ong_id != ong_id) {
+                return response.status(401).json({ error: 'Operation not permitted.'})
+            }
 
-        await connection('incidents').where('id', id).delete()
+            await connection('incidents').where('id', id).delete()
+        } catch (error) {
+            console.log(error)
+        }
 
         return response.status(204).send()
     }
